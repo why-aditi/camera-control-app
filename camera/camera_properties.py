@@ -67,13 +67,14 @@ def _enumerate_via_probe() -> list[CameraInfo]:
     return results
 
 
+# Ranges are MSMF conventions (0-255 for most props; exposure is log-scale -13..0)
 _CONTROL_DEFS = [
-    (cv2.CAP_PROP_BRIGHTNESS,  "Brightness",  -64.0, 64.0),
-    (cv2.CAP_PROP_CONTRAST,    "Contrast",      0.0, 95.0),
-    (cv2.CAP_PROP_SATURATION,  "Saturation",    0.0, 100.0),
-    (cv2.CAP_PROP_SHARPNESS,   "Sharpness",     0.0, 100.0),
-    (cv2.CAP_PROP_GAIN,        "Gain",          0.0, 100.0),
-    (cv2.CAP_PROP_EXPOSURE,    "Exposure",    -13.0,  0.0),
+    (cv2.CAP_PROP_BRIGHTNESS,  "Brightness",    0.0, 255.0),
+    (cv2.CAP_PROP_CONTRAST,    "Contrast",      0.0, 255.0),
+    (cv2.CAP_PROP_SATURATION,  "Saturation",    0.0, 255.0),
+    (cv2.CAP_PROP_SHARPNESS,   "Sharpness",     0.0, 255.0),
+    (cv2.CAP_PROP_GAIN,        "Gain",          0.0, 255.0),
+    (cv2.CAP_PROP_EXPOSURE,    "Exposure",    -13.0,   0.0),
     (cv2.CAP_PROP_FOCUS,       "Focus",         0.0, 255.0),
 ]
 
@@ -82,9 +83,10 @@ def probe_controls(cap: cv2.VideoCapture) -> list[ControlDescriptor]:
     result = []
     for prop_id, name, lo, hi in _CONTROL_DEFS:
         val = cap.get(prop_id)
-        if val != -1.0:
-            result.append(ControlDescriptor(
-                prop_id=prop_id, name=name,
-                min_val=lo, max_val=hi, current=val,
-            ))
+        if val == -1.0:
+            continue
+        result.append(ControlDescriptor(
+            prop_id=prop_id, name=name,
+            min_val=lo, max_val=hi, current=val,
+        ))
     return result

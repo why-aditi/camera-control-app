@@ -25,10 +25,9 @@ from ui.controls_panel import ControlsPanel
 _RESOLUTIONS = [
     ("1920 × 1080 (1080p)", 1920, 1080),
     ("1280 × 720 (720p)",   1280,  720),
-    ("960 × 540",            960,  540),
     ("640 × 480 (VGA)",      640,  480),
 ]
-_FPS_OPTIONS = [60, 30, 24, 15]
+_FPS_OPTIONS = [60, 30, 15]
 _RECORD_QUEUE_SIZE = 256
 
 
@@ -227,6 +226,7 @@ class MainWindow(QMainWindow):
         worker.state_changed.connect(self._on_state_changed)
         worker.controls_ready.connect(self._on_controls_ready)
         worker.stats_update.connect(self._on_stats_update)
+        worker.resolution_ready.connect(self._on_resolution_ready)
         worker.error.connect(self._on_capture_error)
 
         self._btn_close.setEnabled(True)
@@ -266,6 +266,21 @@ class MainWindow(QMainWindow):
     def _on_capture_error(self, msg: str) -> None:
         hint = "\n\nHint: Check Windows camera privacy settings." if sys.platform == "win32" else ""
         QMessageBox.warning(self, "Camera Error", msg + hint)
+
+    @Slot(int, int, float)
+    def _on_resolution_ready(self, w: int, h: int, fps: float) -> None:
+        _, req_w, req_h = _RESOLUTIONS[self._res_combo.currentIndex()]
+        req_fps = self._fps_combo.currentData()
+        if w != req_w or h != req_h or fps != req_fps:
+            self.statusBar().showMessage(f"Unsupported, falling back to {w}×{h} @ {fps:g}fps", 10_000)
+            for i, (_, rw, rh) in enumerate(_RESOLUTIONS):
+                if rw == w and rh == h:
+                    self._res_combo.setCurrentIndex(i)
+                    break
+            for i in range(self._fps_combo.count()):
+                if self._fps_combo.itemData(i) == int(fps):
+                    self._fps_combo.setCurrentIndex(i)
+                    break
 
     # --------------------------------------------------------- Resolution --
 

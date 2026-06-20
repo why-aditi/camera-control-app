@@ -48,11 +48,12 @@ Command = ControlCommand | ResolutionCommand
 
 
 class CaptureThread(QObject):
-    frame_ready    = Signal(object)       # Frame
-    state_changed  = Signal(str)          # "LIVE" | "RECONNECTING" | "DISCONNECTED"
-    controls_ready = Signal(list)         # list[ControlDescriptor]
-    stats_update   = Signal(float, int)   # fps, dropped_total
-    error          = Signal(str)
+    frame_ready      = Signal(object)         # Frame
+    state_changed    = Signal(str)            # "LIVE" | "RECONNECTING" | "DISCONNECTED"
+    controls_ready   = Signal(list)           # list[ControlDescriptor]
+    stats_update     = Signal(float, int)     # fps, dropped_total
+    resolution_ready = Signal(int, int, float)  # actual width, height, fps
+    error            = Signal(str)
 
     def __init__(
         self,
@@ -112,7 +113,16 @@ class CaptureThread(QObject):
             controls = probe_controls(cap)
             self.controls_ready.emit(controls)
             self.state_changed.emit("LIVE")
-            log.info("Opened %s (%dx%d @ %dfps)", self._device_name, self._width, self._height, self._fps)
+            actual_w   = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+            actual_h   = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+            actual_fps = cap.get(cv2.CAP_PROP_FPS)
+            log.info(
+                "Opened %s | requested=%dx%d@%dfps  actual=%dx%d@%gfps",
+                self._device_name,
+                self._width, self._height, self._fps,
+                actual_w, actual_h, actual_fps,
+            )
+            self.resolution_ready.emit(actual_w, actual_h, actual_fps)
 
             result = self._read_loop(cap)
             self._restore_props(cap)
