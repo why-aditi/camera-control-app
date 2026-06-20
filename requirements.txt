@@ -1,0 +1,4 @@
+PyQt6>=6.11
+opencv-python>=4.13
+cv2-enumerate-cameras>=1.3
+numpy>=2.0
