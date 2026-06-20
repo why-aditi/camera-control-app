@@ -28,10 +28,13 @@ class ControlDescriptor:
 
 def enumerate_cameras() -> list[CameraInfo]:
     try:
-        return _enumerate_via_library()
+        results = _enumerate_via_library()
+        if results:
+            return results
+        log.debug("cv2_enumerate_cameras returned empty, falling back to probe")
     except Exception:
         log.debug("cv2_enumerate_cameras unavailable, falling back to probe")
-        return _enumerate_via_probe()
+    return _enumerate_via_probe()
 
 
 def _enumerate_via_library() -> list[CameraInfo]:
@@ -55,15 +58,13 @@ def _enumerate_via_probe() -> list[CameraInfo]:
             if not cap.isOpened():
                 cap.release()
                 continue
-            ok, _ = cap.read()
             cap.release()
-            if ok:
-                results.append(CameraInfo(
-                    index=idx,
-                    name=f"Camera {idx}",
-                    backend=backend,
-                ))
-                break
+            results.append(CameraInfo(
+                index=idx,
+                name=f"Camera {idx}",
+                backend=backend,
+            ))
+            break
     return results
 
 
