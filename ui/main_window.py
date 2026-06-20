@@ -40,7 +40,7 @@ class _VideoView(QWidget):
 
     def update_frame(self, frame: Frame) -> None:
         h, w = frame.data.shape[:2]
-        rgb = cv2.cvtColor(frame.data, cv2.COLOR_BGR2RGB)
+        rgb = cv2.cvtColor(cv2.flip(frame.data, 1), cv2.COLOR_BGR2RGB)
         self._image = QImage(rgb.data, w, h, rgb.strides[0], QImage.Format.Format_RGB888).copy()
         self.update()
 

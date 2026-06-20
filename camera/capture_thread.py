@@ -25,6 +25,7 @@ _SAVED_PROPS = (
     cv2.CAP_PROP_SATURATION,
     cv2.CAP_PROP_SHARPNESS,
     cv2.CAP_PROP_GAIN,
+    cv2.CAP_PROP_AUTO_EXPOSURE,
     cv2.CAP_PROP_EXPOSURE,
     cv2.CAP_PROP_FOCUS,
 )
@@ -141,8 +142,13 @@ class CaptureThread(QObject):
             cap.set(cv2.CAP_PROP_FRAME_WIDTH,  self._width)
             cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self._height)
             cap.set(cv2.CAP_PROP_FPS,          self._fps)
+            cap.set(cv2.CAP_PROP_AUTO_EXPOSURE, 0.75)
             ok, _ = cap.read()
             if ok:
+                # ponytail: 500 ms discard; MSMF auto-exposure needs ~10-30 frames to converge
+                deadline = time.monotonic() + 0.5
+                while time.monotonic() < deadline:
+                    cap.read()
                 return cap
             self._restore_props(cap)
             cap.release()
