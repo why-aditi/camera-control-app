@@ -152,6 +152,8 @@ class MainWindow(QMainWindow):
         # Actions
         act_box = QGroupBox("Actions")
         abl     = QVBoxLayout(act_box)
+        self._fmt_combo    = QComboBox()
+        self._fmt_combo.addItems(["MP4", "AVI"])
         self._btn_record   = QPushButton("⏺  Start Recording")
         self._btn_snapshot = QPushButton("📷  Snapshot")
         self._btn_output   = QPushButton("Output Folder…")
@@ -160,7 +162,7 @@ class MainWindow(QMainWindow):
         self._btn_record.clicked.connect(self._on_toggle_record)
         self._btn_snapshot.clicked.connect(self._on_snapshot)
         self._btn_output.clicked.connect(self._on_choose_output)
-        for b in (self._btn_record, self._btn_snapshot, self._btn_output):
+        for b in (self._fmt_combo, self._btn_record, self._btn_snapshot, self._btn_output):
             abl.addWidget(b)
         rv.addWidget(act_box)
 
@@ -295,7 +297,7 @@ class MainWindow(QMainWindow):
     @Slot()
     def _on_toggle_record(self) -> None:
         if not self._recording:
-            worker = self._recorder.start(self._record_queue, self._output_dir)
+            worker = self._recorder.start(self._record_queue, self._output_dir, fmt=self._fmt_combo.currentText())
             worker.recording_started.connect(lambda p: self.statusBar().showMessage(f"Recording: {p}"))
             worker.recording_stopped.connect(lambda p: self.statusBar().showMessage(f"Saved: {p}", 5000))
             worker.error.connect(lambda m: QMessageBox.warning(self, "Recorder Error", m))

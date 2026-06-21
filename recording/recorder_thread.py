@@ -20,11 +20,12 @@ class RecorderThread(QObject):
     frames_written    = Signal(int)
     error             = Signal(str)
 
-    def __init__(self, record_queue: FrameQueue, output_path: str, fps: int = 30) -> None:
+    def __init__(self, record_queue: FrameQueue, output_path: str, fps: int = 30, fmt: str = "MP4") -> None:
         super().__init__()
         self._queue       = record_queue
         self._output_path = output_path
         self._fps         = fps
+        self._fmt         = fmt
         self._stop        = threading.Event()
 
     def request_stop(self) -> None:
@@ -32,13 +33,13 @@ class RecorderThread(QObject):
 
     def run(self) -> None:
         writer: Optional[cv2.VideoWriter] = None
-        fourcc = cv2.VideoWriter.fourcc(*"mp4v")
+        fourcc = cv2.VideoWriter.fourcc(*("XVID" if self._fmt == "AVI" else "mp4v"))
         total  = 0
         last_emit = time.monotonic()
         path = self._output_path
 
         self.recording_started.emit(path)
-        log.info("Recording started → %s", path)
+        log.info("Recording started -> %s", path)
 
         try:
             while not self._stop.is_set():
@@ -72,4 +73,4 @@ class RecorderThread(QObject):
                 writer.release()
             self.frames_written.emit(total)
             self.recording_stopped.emit(path)
-            log.info("Recording stopped → %s (%d frames)", path, total)
+            log.info("Recording stopped -> %s (%d frames)", path, total)

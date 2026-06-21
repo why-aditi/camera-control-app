@@ -25,12 +25,13 @@ class Recorder:
     def worker(self) -> Optional[RecorderThread]:
         return self._worker
 
-    def start(self, record_queue: FrameQueue, output_dir: Path | str = ".", fps: int = 30) -> RecorderThread:
+    def start(self, record_queue: FrameQueue, output_dir: Path | str = ".", fps: int = 30, fmt: str = "MP4") -> RecorderThread:
         self.stop()
         ts   = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        path = str(Path(output_dir) / f"recording_{ts}.mp4")
+        ext  = "avi" if fmt == "AVI" else "mp4"
+        path = str(Path(output_dir) / f"recording_{ts}.{ext}")
 
-        worker = RecorderThread(record_queue, path, fps)
+        worker = RecorderThread(record_queue, path, fps, fmt)
         thread = QThread()
         worker.moveToThread(thread)
         thread.started.connect(worker.run)
