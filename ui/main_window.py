@@ -249,7 +249,8 @@ class MainWindow(QMainWindow):
 
     @Slot(object)
     def _on_frame(self, frame: Frame) -> None:
-        self._video_view.update_frame(frame)
+        if self._btn_close.isEnabled():
+            self._video_view.update_frame(frame)
 
     @Slot(str)
     def _on_state_changed(self, state: str) -> None:
